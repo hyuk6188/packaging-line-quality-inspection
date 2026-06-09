@@ -64,7 +64,7 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 .input-section-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
 .input-section-title::before{content:'';display:inline-block;width:3px;height:16px;border-radius:2px;background:#378ADD}
 
-.input-table{width:100%;min-width:1050px;border-collapse:collapse;font-size:14px;margin-bottom:1rem}
+.input-table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:1rem}
 .input-table th{padding:10px 10px;text-align:center;font-size:14px;font-weight:600;color:#555;background:#f0f4fa;border:1px solid #d0d8e8;white-space:nowrap}
 .input-table td{padding:5px 4px;border:1px solid #d0d8e8;vertical-align:middle;text-align:center}
 .input-table td.label-cell{background:#f9f9f8;font-size:14px;color:#555;font-weight:500;padding:8px 10px;text-align:left;white-space:nowrap}
@@ -208,12 +208,6 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 ══════════════════════════ -->
 <div id="tab-input" class="tab-content">
 
-  <!-- 금일 품질점검 특이사항 -->
-  <div class="input-section">
-    <div class="input-section-title">금일 품질점검 이슈</div>
-    <textarea id="m-remarks" style="width:100%;height:120px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.7" placeholder="특이사항을 입력하세요"></textarea>
-  </div>
-
   <!-- 1공장 -->
   <div class="input-section">
     <div class="input-section-title">1공장 포장라인</div>
@@ -258,6 +252,11 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
     <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;margin-top:6px" onclick="addRow(2)">+ 라인 추가</button>
   </div>
 
+  <!-- 3. 특이사항 입력 -->
+  <div class="input-section">
+    <div class="input-section-title">3. 특이사항 입력</div>
+    <textarea id="m-remarks" style="width:100%;height:120px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.7" placeholder="특이사항을 입력하세요"></textarea>
+  </div>
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="applyData()">보고서에 적용 및 저장</button>
