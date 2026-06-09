@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>일일 포장라인 품질점검 현황</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--blue:#2878c7;--blue-soft:#eaf3fc;--line:#d9e1ea;--bg:#f3f5f7;--text:#17212b;--muted:#6f7b87;--green:#237a4b;--red:#b43b3b}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",sans-serif}
+    button,input,textarea{font:inherit}.shell{max-width:1180px;margin:0 auto;padding:22px}
+    header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:16px}
+    h1{font-size:25px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:5px}
+    .sync{display:flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;background:#fff;border:1px solid var(--line);font-size:13px;white-space:nowrap}
+    .dot{width:9px;height:9px;border-radius:50%;background:#e29b28}.sync.ready .dot{background:#2ca66f}.sync.error .dot{background:#d94d4d}
+    .tabs,.actions{display:flex;gap:8px;flex-wrap:wrap}.tabs{margin-bottom:14px}.actions{margin-top:16px}
+    button,.link-btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 15px;border-radius:8px;cursor:pointer;text-decoration:none;font-weight:600;font-size:14px}
+    button:hover,.link-btn:hover{filter:brightness(.97)}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button.danger{color:var(--red)}
+    .tab.active{background:var(--blue-soft);color:#165c9f;border-color:#acd0f1}.panel{display:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 2px 9px rgba(26,45,64,.05)}.panel.active{display:block}
+    .card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.card{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff}.card b{font-size:22px;color:#155b98}.card span{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}
+    .section-title{font-weight:700;font-size:16px;margin:22px 0 9px;border-left:4px solid var(--blue);padding-left:8px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:8px;text-align:center}th{background:#edf4fb;color:#405365;font-weight:700}tr:last-child td{border-bottom:0}td:last-child,th:last-child{border-right:0}
+    input,textarea{width:100%;border:1px solid #cfd9e3;border-radius:6px;padding:7px;background:#fff;color:var(--text)}input[type=number]{text-align:right;min-width:76px}textarea{min-height:100px;resize:vertical}
+    .report-table .subtotal td{font-weight:700;background:#f5f8fb}.report-table .total td{font-weight:700;background:var(--blue-soft);color:#165c9f}
+    .remarks{white-space:pre-wrap;background:#f7f9fb;border:1px solid var(--line);border-radius:8px;min-height:70px;padding:12px;font-size:14px}
+    .hint{font-size:12px;color:var(--muted);line-height:1.7}.toast{position:fixed;right:20px;bottom:20px;background:#17212b;color:#fff;padding:11px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
+    dialog{max-width:650px;border:0;border-radius:12px;padding:22px;box-shadow:0 15px 50px rgba(0,0,0,.25)}dialog::backdrop{background:rgba(20,30,40,.45)}dialog h2{margin-top:0;font-size:20px}code{background:#edf1f5;padding:2px 5px;border-radius:4px}
+    @media(max-width:760px){.shell{padding:12px}header{align-items:flex-start;flex-direction:column}.card-grid{grid-template-columns:1fr}.panel{padding:14px}}
+    @media print{body{background:#fff}.shell{max-width:none;padding:0}header,.tabs,.actions,.no-print{display:none!important}.panel{display:none!important;border:0;box-shadow:none;padding:0}#report{display:block!important}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header>
+    <div><h1>일일 포장라인 품질점검 현황</h1><div class="sub" id="report-date"></div></div>
+    <div class="sync" id="sync-status"><span class="dot"></span><span>연결 확인 중</span></div>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-tab="report">보고서</button>
+    <button class="tab" data-tab="input">등록 / 수정</button>
+  </nav>
+
+  <section class="panel active" id="report">
+    <div class="card-grid" id="cards"></div>
+    <div class="section-title">공장별 점검 현황</div>
+    <div class="table-wrap"><table class="report-table"><thead><tr><th>구분</th><th>금일 품목</th><th>금일 수량</th><th>월 누적 품목</th><th>월 누적 수량</th><th>연 누적 품목</th><th>연 누적 수량</th></tr></thead><tbody id="summary-body"></tbody></table></div>
+    <div class="section-title">라인별 점검 내역</div>
+    <div class="table-wrap"><table class="report-table"><thead><tr><th>공장</th><th>포장라인</th><th>검사자</th><th>금일 품목</th><th>금일 수량</th><th>월 누적</th><th>연 누적</th><th>비고</th></tr></thead><tbody id="detail-body"></tbody></table></div>
+    <div class="section-title">특이사항</div><div class="remarks" id="report-remarks"></div>
+    <div class="actions no-print"><button onclick="window.print()">인쇄</button><button onclick="loadShared(true)">시트에서 새로고침</button><a class="link-btn" id="sheet-link" target="_blank" rel="noopener">Google Sheet 열기</a><button onclick="document.getElementById('setup-dialog').showModal()">연결 설정</button></div>
+  </section>
+
+  <section class="panel" id="input">
+    <div class="section-title">특이사항</div><textarea id="remarks" placeholder="금일 특이사항을 입력하세요."></textarea>
+    <div id="editors"></div>
+    <div class="actions"><button class="primary" onclick="saveShared()">Google Sheets에 저장</button><button onclick="addRow(1)">1공장 라인 추가</button><button onclick="addRow(2)">2공장 라인 추가</button><button class="danger" onclick="resetData()">입력 초기화</button></div>
+    <p class="hint">저장을 누르면 Google Sheets에 반영됩니다. 다른 PC는 최대 15초 안에 변경 내용을 자동으로 불러옵니다.</p>
+  </section>
+</main>
+
+<dialog id="setup-dialog"><h2>Google Sheets 연결 설정</h2><p>전용 시트는 이미 생성되어 있습니다. 저장 기능을 활성화하려면 저장소의 <code>google-sheets-web-app.gs</code>를 해당 시트의 Apps Script에 붙여 넣고 웹 앱으로 배포한 뒤, 발급된 URL을 <code>config.js</code>에 입력하세요.</p><p class="hint">배포 설정: 실행 사용자 = 나, 액세스 권한 = 모든 사용자. 자세한 절차는 README.md에 있습니다.</p><div class="actions"><button onclick="document.getElementById('setup-dialog').close()">닫기</button></div></dialog>
+<div class="toast" id="toast"></div>
+<script src="./config.js"></script>
+<script>
+const cfg=window.APP_CONFIG||{};const endpoint=cfg.googleSheetsWebAppUrl||'';let dirty=false,lastRemoteUpdate='';
+let state={plants:{1:[row('평판-1'),row('캐비닛 자동'),row('캐비닛 수동-1'),row('캐비닛 수동-2')],2:[row('임시 포장'),row('알루미늄 포장')]},remarks:''};
+function row(line=''){return{line,inspector:'',todayItem:0,todayQty:0,monthItem:0,monthQty:0,yearItem:0,yearQty:0,note:''}}
+const n=v=>Number(v)||0, sum=(rows,key)=>rows.reduce((a,r)=>a+n(r[key]),0), all=()=>[...state.plants[1],...state.plants[2]];
+function reportDay(){const d=new Date();if(d.getDay()===1)d.setDate(d.getDate()-3);else d.setDate(d.getDate()-1);return d}
+function setStatus(text,kind=''){const el=document.getElementById('sync-status');el.className=`sync ${kind}`;el.lastElementChild.textContent=text}
+function toast(text){const el=document.getElementById('toast');el.textContent=text;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
+function configured(){return endpoint.startsWith('https://script.google.com/macros/s/')}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');b.dataset.tab==='input'?renderEditors():renderReport()});
+document.getElementById('sheet-link').href=cfg.googleSheetUrl;
+document.getElementById('report-date').textContent=new Intl.DateTimeFormat('ko-KR',{dateStyle:'full'}).format(reportDay());
+function renderReport(){const rows=all(), keys=['todayItem','todayQty','monthItem','monthQty','yearItem','yearQty'], totals=Object.fromEntries(keys.map(k=>[k,sum(rows,k)]));document.getElementById('cards').innerHTML=`<div class="card"><span>금일 점검</span><b>${totals.todayItem.toLocaleString()}품목 / ${totals.todayQty.toLocaleString()}개</b></div><div class="card"><span>월 누적</span><b>${totals.monthItem.toLocaleString()}품목 / ${totals.monthQty.toLocaleString()}개</b></div><div class="card"><span>연 누적</span><b>${totals.yearItem.toLocaleString()}품목 / ${totals.yearQty.toLocaleString()}개</b></div>`;let summary='';[1,2].forEach(p=>summary+=`<tr><td>${p}공장</td>${keys.map(k=>`<td>${sum(state.plants[p],k).toLocaleString()}</td>`).join('')}</tr>`);summary+=`<tr class="total"><td>합계</td>${keys.map(k=>`<td>${totals[k].toLocaleString()}</td>`).join('')}</tr>`;document.getElementById('summary-body').innerHTML=summary;document.getElementById('detail-body').innerHTML=[1,2].flatMap(p=>state.plants[p].map(r=>`<tr><td>${p}공장</td><td>${escapeHtml(r.line)}</td><td>${escapeHtml(r.inspector)}</td><td>${n(r.todayItem).toLocaleString()}</td><td>${n(r.todayQty).toLocaleString()}</td><td>${n(r.monthItem).toLocaleString()} / ${n(r.monthQty).toLocaleString()}</td><td>${n(r.yearItem).toLocaleString()} / ${n(r.yearQty).toLocaleString()}</td><td>${escapeHtml(r.note)}</td></tr>`)).join('');document.getElementById('report-remarks').textContent=state.remarks||'특이사항 없음'}
+function renderEditors(){document.getElementById('remarks').value=state.remarks||'';document.getElementById('editors').innerHTML=[1,2].map(p=>`<div class="section-title">${p}공장 포장라인</div><div class="table-wrap"><table><thead><tr><th>라인</th><th>검사자</th><th>금일 품목</th><th>금일 수량</th><th>월 품목</th><th>월 수량</th><th>연 품목</th><th>연 수량</th><th>비고</th><th></th></tr></thead><tbody>${state.plants[p].map((r,i)=>`<tr>${input(p,i,'line',r.line)}${input(p,i,'inspector',r.inspector)}${input(p,i,'todayItem',r.todayItem,'number')}${input(p,i,'todayQty',r.todayQty,'number')}${input(p,i,'monthItem',r.monthItem,'number')}${input(p,i,'monthQty',r.monthQty,'number')}${input(p,i,'yearItem',r.yearItem,'number')}${input(p,i,'yearQty',r.yearQty,'number')}${input(p,i,'note',r.note)}<td><button class="danger" onclick="removeRow(${p},${i})">삭제</button></td></tr>`).join('')}</tbody></table></div>`).join('');document.querySelectorAll('[data-field]').forEach(el=>el.oninput=()=>{const{plant,index,field}=el.dataset;state.plants[plant][index][field]=el.type==='number'?n(el.value):el.value;dirty=true});document.getElementById('remarks').oninput=e=>{state.remarks=e.target.value;dirty=true}}
+function input(p,i,key,val,type='text'){return`<td><input type="${type}" min="0" data-plant="${p}" data-index="${i}" data-field="${key}" value="${escapeHtml(val)}"></td>`}
+function addRow(p){state.plants[p].push(row());dirty=true;renderEditors()}function removeRow(p,i){if(state.plants[p].length===1)return toast('공장별 최소 1개 라인이 필요합니다');state.plants[p].splice(i,1);dirty=true;renderEditors()}
+function resetData(){if(!confirm('현재 입력 내용을 초기화할까요?'))return;state={plants:{1:[row()],2:[row()]},remarks:''};dirty=true;renderEditors()}
+async function saveShared(){if(!configured()){setStatus('연결 설정 필요','error');document.getElementById('setup-dialog').showModal();return}setStatus('시트에 저장 중');try{await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({payload:JSON.stringify({state,updatedBy:navigator.userAgent})})});dirty=false;lastRemoteUpdate=new Date().toISOString();setStatus('저장 완료','ready');renderReport();toast('Google Sheets에 저장했습니다')}catch(e){console.error(e);setStatus('저장 실패','error');toast('저장에 실패했습니다')}}
+function loadShared(show=false){if(!configured()){setStatus('연결 설정 필요','error');return}if(dirty&&!show)return;setStatus('시트 확인 중');const cb=`sheetCb_${Date.now()}`,s=document.createElement('script');window[cb]=payload=>{try{if(payload?.state&&(!dirty||show)){state=payload.state;lastRemoteUpdate=payload.updatedAt||'';renderReport();renderEditors();dirty=false;if(show)toast('최신 데이터를 불러왔습니다')}setStatus('실시간 동기화 중','ready')}finally{delete window[cb];s.remove()}};s.onerror=()=>{delete window[cb];s.remove();setStatus('연결 실패','error')};s.src=`${endpoint}?callback=${cb}&t=${Date.now()}`;document.body.appendChild(s)}
+renderReport();renderEditors();loadShared(false);setInterval(()=>loadShared(false),cfg.syncIntervalMs||15000);
+</script>
+</body>
+</html>
