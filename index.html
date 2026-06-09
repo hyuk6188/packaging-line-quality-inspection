@@ -1,89 +1,727 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>일일 포장라인 품질점검 현황</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{--blue:#2878c7;--blue-soft:#eaf3fc;--line:#d9e1ea;--bg:#f3f5f7;--text:#17212b;--muted:#6f7b87;--green:#237a4b;--red:#b43b3b}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"Noto Sans KR",sans-serif}
-    button,input,textarea{font:inherit}.shell{max-width:1180px;margin:0 auto;padding:22px}
-    header{display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:16px}
-    h1{font-size:25px;margin:0}.sub{color:var(--muted);font-size:13px;margin-top:5px}
-    .sync{display:flex;align-items:center;gap:8px;border-radius:999px;padding:8px 13px;background:#fff;border:1px solid var(--line);font-size:13px;white-space:nowrap}
-    .dot{width:9px;height:9px;border-radius:50%;background:#e29b28}.sync.ready .dot{background:#2ca66f}.sync.error .dot{background:#d94d4d}
-    .tabs,.actions{display:flex;gap:8px;flex-wrap:wrap}.tabs{margin-bottom:14px}.actions{margin-top:16px}
-    button,.link-btn{border:1px solid var(--line);background:#fff;color:var(--text);padding:9px 15px;border-radius:8px;cursor:pointer;text-decoration:none;font-weight:600;font-size:14px}
-    button:hover,.link-btn:hover{filter:brightness(.97)}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button.danger{color:var(--red)}
-    .tab.active{background:var(--blue-soft);color:#165c9f;border-color:#acd0f1}.panel{display:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px;box-shadow:0 2px 9px rgba(26,45,64,.05)}.panel.active{display:block}
-    .card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}.card{padding:16px;border:1px solid var(--line);border-radius:10px;background:#fff}.card b{font-size:22px;color:#155b98}.card span{display:block;color:var(--muted);font-size:12px;margin-bottom:7px}
-    .section-title{font-weight:700;font-size:16px;margin:22px 0 9px;border-left:4px solid var(--blue);padding-left:8px}
-    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}table{border-collapse:collapse;width:100%;min-width:900px;font-size:13px}th,td{border-bottom:1px solid var(--line);border-right:1px solid var(--line);padding:8px;text-align:center}th{background:#edf4fb;color:#405365;font-weight:700}tr:last-child td{border-bottom:0}td:last-child,th:last-child{border-right:0}
-    input,textarea{width:100%;border:1px solid #cfd9e3;border-radius:6px;padding:7px;background:#fff;color:var(--text)}input[type=number]{text-align:right;min-width:76px}textarea{min-height:100px;resize:vertical}
-    .report-table .subtotal td{font-weight:700;background:#f5f8fb}.report-table .total td{font-weight:700;background:var(--blue-soft);color:#165c9f}
-    .remarks{white-space:pre-wrap;background:#f7f9fb;border:1px solid var(--line);border-radius:8px;min-height:70px;padding:12px;font-size:14px}
-    .hint{font-size:12px;color:var(--muted);line-height:1.7}.toast{position:fixed;right:20px;bottom:20px;background:#17212b;color:#fff;padding:11px 16px;border-radius:8px;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1}
-    dialog{max-width:650px;border:0;border-radius:12px;padding:22px;box-shadow:0 15px 50px rgba(0,0,0,.25)}dialog::backdrop{background:rgba(20,30,40,.45)}dialog h2{margin-top:0;font-size:20px}code{background:#edf1f5;padding:2px 5px;border-radius:4px}
-    @media(max-width:760px){.shell{padding:12px}header{align-items:flex-start;flex-direction:column}.card-grid{grid-template-columns:1fr}.panel{padding:14px}}
-    @media print{body{background:#fff}.shell{max-width:none;padding:0}header,.tabs,.actions,.no-print{display:none!important}.panel{display:none!important;border:0;box-shadow:none;padding:0}#report{display:block!important}}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>포장검사 일일 품질점검 현황</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:#f0f0ee;color:#1a1a1a;min-height:100vh;padding:2rem 1rem}
+
+/* 탭 */
+.tab-bar{display:flex;max-width:1100px;margin:0 auto;background:#fff;border-radius:12px 12px 0 0;overflow:hidden;border-bottom:2px solid #378ADD}
+.tab-btn{flex:1;padding:14px 0;font-size:16px;font-weight:500;font-family:'Noto Sans KR',sans-serif;background:#f5f5f3;color:#888;border:none;cursor:pointer;transition:all .2s}
+.tab-btn.active{background:#fff;color:#378ADD;font-weight:600}
+.tab-btn:hover:not(.active){background:#ebebea;color:#555}
+.tab-content{display:none;max-width:1100px;margin:0 auto;background:#fff;border-radius:0 0 12px 12px;padding:2rem;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.tab-content.active{display:block}
+
+/* 보고서 */
+.page{background:#fff}
+.report-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.75rem;padding-bottom:1.25rem;border-bottom:2px solid #378ADD}
+.report-title{font-size:24px;font-weight:700;color:#1a1a1a;letter-spacing:-0.3px}
+.report-meta{text-align:right;font-size:15px;color:#888}
+.report-date{font-size:13px;font-weight:500;color:#555}
+
+.section-title{font-size:17px;font-weight:600;color:#1a1a1a;margin-bottom:.75rem;display:flex;align-items:center;gap:8px}
+.section-title::before{content:'';display:inline-block;width:3px;height:16px;border-radius:2px;background:#378ADD}
+
+.divider{border:none;border-top:0.5px solid #e0e0da;margin:1.75rem 0}
+
+/* 테이블 공통 */
+table{width:100%;border-collapse:collapse;font-size:15px}
+thead th{padding:10px 10px;text-align:center;font-weight:600;font-size:14px;color:#555;background:#f0f4fa;border:1px solid #d0d8e8}
+tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-align:middle;font-size:15px}
+.group-cell{background:#f5f5f3;font-weight:600;font-size:14px}
+.subtotal-row td{background:#f0f4fa;font-weight:600;border:1px solid #d0d8e8;font-size:15px}
+.total-row td{background:#ddeaf9;color:#185fa5;font-weight:700;border:1px solid #b0cce8;font-size:15px}
+
+/* 특이사항 박스 */
+.remarks-box{border:0.5px solid #e0e0da;border-radius:8px;min-height:80px;padding:1rem;background:#f9f9f8;font-size:15px;color:#1a1a1a;white-space:pre-wrap;line-height:1.7}
+
+/* 첨부 */
+.attach-list{list-style:none;padding:.5rem 0}
+.attach-list li{padding:6px 0;font-size:15px;color:#555;display:flex;align-items:center;gap:8px}
+.attach-list li::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#378ADD}
+
+/* 액션 버튼 */
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.image-copy-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#2f7d4f;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+.image-copy-btn:hover{background:#25663f}
+.print-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#378ADD;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+.print-btn:hover{background:#2a6fb5}
+.sync-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;background:#fff;color:#185fa5;border:1px solid #b0cce8;border-radius:8px;font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
+.sync-btn:hover{background:#f0f6fc}
+.sheet-link{display:inline-flex;align-items:center;padding:10px 18px;background:#fff;color:#555;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:500;text-decoration:none}
+.sync-status{display:inline-flex;align-items:center;gap:7px;margin-left:auto;padding:9px 14px;border-radius:999px;background:#f5f5f3;color:#666;border:1px solid #ddd;font-size:13px;font-weight:600}
+.sync-status::before{content:'';width:8px;height:8px;border-radius:50%;background:#e0a229}
+.sync-status.ready::before{background:#2f9e62}.sync-status.error::before{background:#d94a4a}
+
+/* 입력 탭 */
+.input-section{margin-bottom:2rem}
+.input-section-title{font-size:16px;font-weight:600;color:#1a1a1a;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.input-section-title::before{content:'';display:inline-block;width:3px;height:16px;border-radius:2px;background:#378ADD}
+
+.input-table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:1rem}
+.input-table th{padding:10px 10px;text-align:center;font-size:14px;font-weight:600;color:#555;background:#f0f4fa;border:1px solid #d0d8e8;white-space:nowrap}
+.input-table td{padding:5px 4px;border:1px solid #d0d8e8;vertical-align:middle;text-align:center}
+.input-table td.label-cell{background:#f9f9f8;font-size:14px;color:#555;font-weight:500;padding:8px 10px;text-align:left;white-space:nowrap}
+.input-table td.group-cell-input{background:#f0f4fa;font-weight:600;font-size:14px;text-align:center;vertical-align:middle}
+.input-table input[type=number],.input-table input[type=text]{width:80px;padding:6px 4px;border:0.5px solid #ddd;border-radius:4px;font-size:14px;font-family:'Noto Sans KR',sans-serif;text-align:center;background:#fff}
+.input-table input[type=text].wide{width:160px}
+.input-table input:focus{outline:none;border-color:#378ADD}
+.input-table td.subtotal-calc{background:#f0f4fa;font-weight:600;font-size:14px;color:#185fa5}
+
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:.75rem}
+.btn{padding:10px 22px;border:none;border-radius:8px;font-size:15px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:background .15s}
+.btn-primary{background:#378ADD;color:#fff}
+.btn-primary:hover{background:#2a6fb5}
+.btn-secondary{background:#f0f0ee;color:#555;border:0.5px solid #ddd}
+.btn-secondary:hover{background:#e5e5e3}
+.btn-danger{background:#fcebeb;color:#a32d2d;border:0.5px solid #f0c0c0}
+.btn-danger:hover{background:#f7d0d0}
+
+.toast{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;padding:12px 22px;border-radius:8px;font-size:15px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999}
+.toast.show{opacity:1}
+
+/* 인쇄 캡처용 */
+.capture-sharp,.capture-sharp *{color:#000!important}
+.capture-sharp .total-row td{background:#cfe3f6!important;color:#185fa5!important;font-weight:700!important}
+.capture-sharp .subtotal-row td,.capture-sharp thead th,.capture-sharp .group-cell,.capture-sharp .group-cell-input{background:#e8edf5!important}
+.capture-sharp table,.capture-sharp thead th,.capture-sharp tbody td{border-color:#000!important;border-width:0.3px!important}
+.capture-sharp .remarks-box{background:#f5f5f3!important;border-color:#000!important;border-width:0.3px!important}
+.capture-sharp .report-header{border-bottom:2px solid #000!important}
+.capture-sharp .report-actions{display:none!important}
+.capture-sharp-hide{display:none!important}
+
+@media print{
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .tab-bar,.report-actions{display:none!important}
+  body>:not(#tab-report){display:none!important}
+  .tab-content{display:none!important}
+  #tab-report{display:block!important;padding:0;box-shadow:none;border-radius:0}
+  body{background:#fff;padding:0}
+}
+
+/* 누적 요약 카드 */
+.summary-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.75rem}
+.sum-card{background:#fff;border:0.5px solid #d0dcee;border-radius:12px;padding:1rem 1.25rem}
+.sum-card-label{font-size:12px;font-weight:500;color:#888;margin-bottom:10px;letter-spacing:0.3px;text-transform:none}
+.sum-card-values{display:flex;gap:28px}
+.sum-card-val{text-align:center}
+.sum-card-val .vl{font-size:12px;color:#aaa;margin-bottom:4px}
+.sum-card-val .vn{font-size:24px;font-weight:700;color:#1a1a1a}
+.sum-card-val .vn.blue{color:#185fa5}
+</style>
 </head>
 <body>
-<main class="shell">
-  <header>
-    <div><h1>일일 포장라인 품질점검 현황</h1><div class="sub" id="report-date"></div></div>
-    <div class="sync" id="sync-status"><span class="dot"></span><span>연결 확인 중</span></div>
-  </header>
-  <nav class="tabs">
-    <button class="tab active" data-tab="report">보고서</button>
-    <button class="tab" data-tab="input">등록 / 수정</button>
-  </nav>
 
-  <section class="panel active" id="report">
-    <div class="card-grid" id="cards"></div>
-    <div class="section-title">공장별 점검 현황</div>
-    <div class="table-wrap"><table class="report-table"><thead><tr><th>구분</th><th>금일 품목</th><th>금일 수량</th><th>월 누적 품목</th><th>월 누적 수량</th><th>연 누적 품목</th><th>연 누적 수량</th></tr></thead><tbody id="summary-body"></tbody></table></div>
-    <div class="section-title">라인별 점검 내역</div>
-    <div class="table-wrap"><table class="report-table"><thead><tr><th>공장</th><th>포장라인</th><th>검사자</th><th>금일 품목</th><th>금일 수량</th><th>월 누적</th><th>연 누적</th><th>비고</th></tr></thead><tbody id="detail-body"></tbody></table></div>
-    <div class="section-title">특이사항</div><div class="remarks" id="report-remarks"></div>
-    <div class="actions no-print"><button onclick="window.print()">인쇄</button><button onclick="loadShared(true)">시트에서 새로고침</button><a class="link-btn" id="sheet-link" target="_blank" rel="noopener">Google Sheet 열기</a><button onclick="document.getElementById('setup-dialog').showModal()">연결 설정</button></div>
-  </section>
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('report')">보고서 미리보기</button>
+  <button class="tab-btn" onclick="switchTab('input')">데이터 입력</button>
+</div>
 
-  <section class="panel" id="input">
-    <div class="section-title">특이사항</div><textarea id="remarks" placeholder="금일 특이사항을 입력하세요."></textarea>
-    <div id="editors"></div>
-    <div class="actions"><button class="primary" onclick="saveShared()">Google Sheets에 저장</button><button onclick="addRow(1)">1공장 라인 추가</button><button onclick="addRow(2)">2공장 라인 추가</button><button class="danger" onclick="resetData()">입력 초기화</button></div>
-    <p class="hint">저장을 누르면 Google Sheets에 반영됩니다. 다른 PC는 최대 15초 안에 변경 내용을 자동으로 불러옵니다.</p>
-  </section>
-</main>
+<!-- ══════════════════════════
+     탭 1: 보고서 미리보기
+══════════════════════════ -->
+<div id="tab-report" class="tab-content active">
+  <div class="report-actions">
+    <button class="image-copy-btn" onclick="copyReportImage()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+      대시보드 이미지 복사
+    </button>
+    <button class="sync-btn" onclick="loadSharedData(true)">최신 데이터 불러오기</button>
+    <a class="sheet-link" id="sheet-link" target="_blank" rel="noopener">Google Sheet 열기</a>
+    <div class="sync-status" id="sync-status">연결 확인 중</div>
+  </div>
 
-<dialog id="setup-dialog"><h2>Google Sheets 연결 설정</h2><p>전용 시트는 이미 생성되어 있습니다. 저장 기능을 활성화하려면 저장소의 <code>google-sheets-web-app.gs</code>를 해당 시트의 Apps Script에 붙여 넣고 웹 앱으로 배포한 뒤, 발급된 URL을 <code>config.js</code>에 입력하세요.</p><p class="hint">배포 설정: 실행 사용자 = 나, 액세스 권한 = 모든 사용자. 자세한 절차는 README.md에 있습니다.</p><div class="actions"><button onclick="document.getElementById('setup-dialog').close()">닫기</button></div></dialog>
+  <div class="page" id="report-page">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:1.25rem;margin-bottom:1.75rem;border-bottom:2px solid #378ADD">
+      <div class="report-title">일일 포장라인 품질점검 현황</div>
+      <div class="report-date" id="r-date"></div>
+    </div>
+
+    <!-- 누적 요약 카드 -->
+    <div class="summary-cards" id="summary-cards"></div>
+
+    <!-- 1. 검사현황 -->
+    <div style="margin-bottom:1.75rem">
+      <div class="section-title">1. 검사현황</div>
+      <table id="status-table" style="table-layout:fixed">
+        <thead>
+          <tr>
+            <th rowspan="2" style="width:calc(100% / 7)">구분</th>
+            <th colspan="2" id="th-today"></th>
+            <th colspan="2" id="th-month"></th>
+            <th colspan="2">26년 누적</th>
+          </tr>
+          <tr>
+            <th>품목</th><th>수량</th>
+            <th>품목</th><th>수량</th>
+            <th>품목</th><th>수량</th>
+          </tr>
+        </thead>
+        <tbody id="status-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- 2. 검사내용 -->
+    <div style="margin-bottom:1.75rem">
+      <div class="section-title">2. 검사내용</div>
+      <table id="detail-table" style="table-layout:fixed">
+        <thead>
+          <tr>
+            <th style="width:45px;white-space:nowrap;text-align:center;padding:8px 4px">번호</th>
+            <th style="width:80px">사업장</th>
+            <th style="width:180px">포장라인</th>
+            <th style="width:calc((100% - 455px) / 3)">검사자</th>
+            <th style="width:calc((100% - 455px) / 3)">품목</th>
+            <th style="width:calc((100% - 455px) / 3)">수량</th>
+            <th style="width:150px">비고</th>
+          </tr>
+        </thead>
+        <tbody id="detail-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- 3. 특이사항 -->
+    <div style="margin-bottom:1.75rem">
+      <div class="section-title">3. 특이사항</div>
+      <div class="remarks-box" id="r-remarks"></div>
+    </div>
+
+    <!-- 4. 첨부 -->
+    <div style="margin-bottom:0.5rem">
+      <div class="section-title">4. 첨부</div>
+      <ul class="attach-list">
+        <li>4-1. 목제품 품질검사 기준서</li>
+        <li>4-2. 일일 품질점검 일지</li>
+      </ul>
+      <div style="text-align:right;font-size:13px;color:#888;margin-top:12px">충주공장 품질보증팀</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     탭 2: 데이터 입력
+══════════════════════════ -->
+<div id="tab-input" class="tab-content">
+
+  <!-- 금일 품질점검 특이사항 -->
+  <div class="input-section">
+    <div class="input-section-title">금일 품질점검 이슈</div>
+    <textarea id="m-remarks" style="width:100%;height:120px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.7" placeholder="특이사항을 입력하세요"></textarea>
+  </div>
+
+  <!-- 1공장 -->
+  <div class="input-section">
+    <div class="input-section-title">1공장 포장라인</div>
+    <table class="input-table" style="table-layout:fixed">
+      <thead>
+        <tr>
+          <th style="width:110px">포장라인</th>
+          <th style="width:70px">검사자</th>
+          <th>금일 품목</th>
+          <th>금일 수량</th>
+          <th>6월누적 품목</th>
+          <th>6월누적 수량</th>
+          <th>26년누적 품목</th>
+          <th>26년누적 수량</th>
+        </tr>
+      </thead>
+      <tbody id="plant1-tbody"></tbody>
+    </table>
+    <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;margin-top:6px" onclick="addRow(1)">+ 라인 추가</button>
+  </div>
+
+  <!-- 2공장 -->
+  <div class="input-section">
+    <div class="input-section-title">2공장 포장라인</div>
+    <table class="input-table" style="table-layout:fixed">
+      <thead>
+        <tr>
+          <th style="width:110px">포장라인</th>
+          <th style="width:70px">검사자</th>
+          <th>금일 품목</th>
+          <th>금일 수량</th>
+          <th>6월누적 품목</th>
+          <th>6월누적 수량</th>
+          <th>26년누적 품목</th>
+          <th>26년누적 수량</th>
+        </tr>
+      </thead>
+      <tbody id="plant2-tbody"></tbody>
+    </table>
+    <button class="btn btn-secondary" style="font-size:12px;padding:6px 14px;margin-top:6px" onclick="addRow(2)">+ 라인 추가</button>
+  </div>
+
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="applyData()">보고서에 적용 및 저장</button>
+    <button class="btn btn-secondary" onclick="loadSharedData(true)">최신 데이터 불러오기</button>
+    <button class="btn btn-danger" onclick="resetData()">초기화</button>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
+
 <script src="./config.js"></script>
 <script>
-const cfg=window.APP_CONFIG||{};const endpoint=cfg.googleSheetsWebAppUrl||'';let dirty=false,lastRemoteUpdate='';
-let state={plants:{1:[row('평판-1'),row('캐비닛 자동'),row('캐비닛 수동-1'),row('캐비닛 수동-2')],2:[row('임시 포장'),row('알루미늄 포장')]},remarks:''};
-function row(line=''){return{line,inspector:'',todayItem:0,todayQty:0,monthItem:0,monthQty:0,yearItem:0,yearQty:0,note:''}}
-const n=v=>Number(v)||0, sum=(rows,key)=>rows.reduce((a,r)=>a+n(r[key]),0), all=()=>[...state.plants[1],...state.plants[2]];
-function reportDay(){const d=new Date();if(d.getDay()===1)d.setDate(d.getDate()-3);else d.setDate(d.getDate()-1);return d}
-function setStatus(text,kind=''){const el=document.getElementById('sync-status');el.className=`sync ${kind}`;el.lastElementChild.textContent=text}
-function toast(text){const el=document.getElementById('toast');el.textContent=text;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2200)}
-function configured(){return endpoint.startsWith('https://script.google.com/macros/s/')}
-function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab,.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');b.dataset.tab==='input'?renderEditors():renderReport()});
-document.getElementById('sheet-link').href=cfg.googleSheetUrl;
-document.getElementById('report-date').textContent=new Intl.DateTimeFormat('ko-KR',{dateStyle:'full'}).format(reportDay());
-function renderReport(){const rows=all(), keys=['todayItem','todayQty','monthItem','monthQty','yearItem','yearQty'], totals=Object.fromEntries(keys.map(k=>[k,sum(rows,k)]));document.getElementById('cards').innerHTML=`<div class="card"><span>금일 점검</span><b>${totals.todayItem.toLocaleString()}품목 / ${totals.todayQty.toLocaleString()}개</b></div><div class="card"><span>월 누적</span><b>${totals.monthItem.toLocaleString()}품목 / ${totals.monthQty.toLocaleString()}개</b></div><div class="card"><span>연 누적</span><b>${totals.yearItem.toLocaleString()}품목 / ${totals.yearQty.toLocaleString()}개</b></div>`;let summary='';[1,2].forEach(p=>summary+=`<tr><td>${p}공장</td>${keys.map(k=>`<td>${sum(state.plants[p],k).toLocaleString()}</td>`).join('')}</tr>`);summary+=`<tr class="total"><td>합계</td>${keys.map(k=>`<td>${totals[k].toLocaleString()}</td>`).join('')}</tr>`;document.getElementById('summary-body').innerHTML=summary;document.getElementById('detail-body').innerHTML=[1,2].flatMap(p=>state.plants[p].map(r=>`<tr><td>${p}공장</td><td>${escapeHtml(r.line)}</td><td>${escapeHtml(r.inspector)}</td><td>${n(r.todayItem).toLocaleString()}</td><td>${n(r.todayQty).toLocaleString()}</td><td>${n(r.monthItem).toLocaleString()} / ${n(r.monthQty).toLocaleString()}</td><td>${n(r.yearItem).toLocaleString()} / ${n(r.yearQty).toLocaleString()}</td><td>${escapeHtml(r.note)}</td></tr>`)).join('');document.getElementById('report-remarks').textContent=state.remarks||'특이사항 없음'}
-function renderEditors(){document.getElementById('remarks').value=state.remarks||'';document.getElementById('editors').innerHTML=[1,2].map(p=>`<div class="section-title">${p}공장 포장라인</div><div class="table-wrap"><table><thead><tr><th>라인</th><th>검사자</th><th>금일 품목</th><th>금일 수량</th><th>월 품목</th><th>월 수량</th><th>연 품목</th><th>연 수량</th><th>비고</th><th></th></tr></thead><tbody>${state.plants[p].map((r,i)=>`<tr>${input(p,i,'line',r.line)}${input(p,i,'inspector',r.inspector)}${input(p,i,'todayItem',r.todayItem,'number')}${input(p,i,'todayQty',r.todayQty,'number')}${input(p,i,'monthItem',r.monthItem,'number')}${input(p,i,'monthQty',r.monthQty,'number')}${input(p,i,'yearItem',r.yearItem,'number')}${input(p,i,'yearQty',r.yearQty,'number')}${input(p,i,'note',r.note)}<td><button class="danger" onclick="removeRow(${p},${i})">삭제</button></td></tr>`).join('')}</tbody></table></div>`).join('');document.querySelectorAll('[data-field]').forEach(el=>el.oninput=()=>{const{plant,index,field}=el.dataset;state.plants[plant][index][field]=el.type==='number'?n(el.value):el.value;dirty=true});document.getElementById('remarks').oninput=e=>{state.remarks=e.target.value;dirty=true}}
-function input(p,i,key,val,type='text'){return`<td><input type="${type}" min="0" data-plant="${p}" data-index="${i}" data-field="${key}" value="${escapeHtml(val)}"></td>`}
-function addRow(p){state.plants[p].push(row());dirty=true;renderEditors()}function removeRow(p,i){if(state.plants[p].length===1)return toast('공장별 최소 1개 라인이 필요합니다');state.plants[p].splice(i,1);dirty=true;renderEditors()}
-function resetData(){if(!confirm('현재 입력 내용을 초기화할까요?'))return;state={plants:{1:[row()],2:[row()]},remarks:''};dirty=true;renderEditors()}
-async function saveShared(){if(!configured()){setStatus('연결 설정 필요','error');document.getElementById('setup-dialog').showModal();return}setStatus('시트에 저장 중');try{await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({payload:JSON.stringify({state,updatedBy:navigator.userAgent})})});dirty=false;lastRemoteUpdate=new Date().toISOString();setStatus('저장 완료','ready');renderReport();toast('Google Sheets에 저장했습니다')}catch(e){console.error(e);setStatus('저장 실패','error');toast('저장에 실패했습니다')}}
-function loadShared(show=false){if(!configured()){setStatus('연결 설정 필요','error');return}if(dirty&&!show)return;setStatus('시트 확인 중');const cb=`sheetCb_${Date.now()}`,s=document.createElement('script');window[cb]=payload=>{try{if(payload?.state&&(!dirty||show)){state=payload.state;lastRemoteUpdate=payload.updatedAt||'';renderReport();renderEditors();dirty=false;if(show)toast('최신 데이터를 불러왔습니다')}setStatus('실시간 동기화 중','ready')}finally{delete window[cb];s.remove()}};s.onerror=()=>{delete window[cb];s.remove();setStatus('연결 실패','error')};s.src=`${endpoint}?callback=${cb}&t=${Date.now()}`;document.body.appendChild(s)}
-renderReport();renderEditors();loadShared(false);setInterval(()=>loadShared(false),cfg.syncIntervalMs||15000);
+const APP_CONFIG = window.APP_CONFIG || {};
+const GOOGLE_SHEETS_WEB_APP_URL = APP_CONFIG.googleSheetsWebAppUrl || '';
+let hasUnsavedChanges = false;
+
+function isSharedSyncConfigured() {
+  return GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/');
+}
+
+function setSyncStatus(message, state = '') {
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  el.className = `sync-status ${state}`;
+  el.textContent = message;
+}
+
+function markDirty() {
+  hasUnsavedChanges = true;
+  setSyncStatus('저장되지 않은 변경사항');
+}
+
+document.getElementById('sheet-link').href = APP_CONFIG.googleSheetUrl || '#';
+
+// ── 초기 데이터 ──
+let data = {
+  plant1: [
+    {line:'상판-1',       inspector:'김순희', tItem:48, tQty:160,  mItem:606, mQty:2183, yItem:606, yQty:2183, note:''},
+    {line:'캐비닛 자동',   inspector:'박성자', tItem:19, tQty:841,  mItem:95,  mQty:4205, yItem:95,  yQty:4205, note:''},
+    {line:'캐비닛 수동-1', inspector:'정영희', tItem:14, tQty:315,  mItem:70,  mQty:1575, yItem:70,  yQty:1575, note:''},
+    {line:'캐비닛 수동-2', inspector:'김동식', tItem:28, tQty:1016, mItem:140, mQty:5080, yItem:140, yQty:5080, note:''},
+    {line:'자동화-1',     inspector:'이태희', tItem:6,  tQty:201,  mItem:30,  mQty:1005, yItem:30,  yQty:1005, note:''},
+    {line:'주문품',       inspector:'이미욱', tItem:52, tQty:275,  mItem:260, mQty:1375, yItem:260, yQty:1375, note:''},
+    {line:'서랍',         inspector:'조병기', tItem:5,  tQty:67,   mItem:25,  mQty:335,  yItem:25,  yQty:335,  note:''},
+    {line:'포장철물',     inspector:'이명희', tItem:13, tQty:524,  mItem:65,  mQty:2620, yItem:65,  yQty:2620, note:''},
+  ],
+  plant2: [
+    {line:'퍼시스 포장', inspector:'김병욱', tItem:9, tQty:93,  mItem:45, mQty:465,  yItem:45, yQty:465,  note:''},
+    {line:'일룸 포장',   inspector:'이용근', tItem:7, tQty:80,  mItem:35, mQty:400,  yItem:35, yQty:400,  note:''},
+  ],
+  kpi: { mItem:0, mQty:0, yItem:0, yQty:0, prevItem:0, prevQty:0 },
+  remarks: '',
+};
+
+// 날짜
+const now = new Date();
+// 월요일(1)이면 -3일(금요일), 그 외 평일이면 -1일
+const day = now.getDay();
+if(day===1) now.setDate(now.getDate()-3);
+else now.setDate(now.getDate()-1);
+const yyyy = now.getFullYear();
+const mm = now.getMonth()+1;
+const dd = now.getDate();
+document.getElementById('r-date').textContent = `${yyyy}년 ${mm}월 ${dd}일`;
+document.getElementById('th-today').textContent = `${mm}월 ${dd}일`;
+document.getElementById('th-today').colSpan = 2;
+document.getElementById('th-month').textContent = `${mm}월 누적`;
+document.getElementById('th-month').colSpan = 2;
+
+// ── 탭 전환 ──
+function switchTab(t) {
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['report','input'][i]===t));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='report') renderReport();
+  if(t==='input') renderInputs();
+}
+
+// ── 누적 자동 계산 ──
+// 각 라인: mItem = 전일6월누적 + 금일, yItem = 전일26년누적 + 금일 (같은 구조)
+// 입력 필드는 "전일 누적"을 직접 입력하고 표시는 "금일 후 누적"으로 보여줌
+// 여기서는 data.mItem/yItem 이 이미 "금일 포함 누적"으로 저장됨
+// 입력 시: 전일누적 입력 → 금일 더해서 자동 계산 후 data에 반영
+
+function recalcRow(p, i) {
+  const arr = p===1 ? data.plant1 : data.plant2;
+  const r = arr[i];
+  // 전일누적 = 현재 저장된 누적 - 이전 금일값 (변경 전)
+  // 간단하게: 누적 = 전일누적저장값 + 금일 → 전일누적은 r.prevMItem 등으로 별도 보관
+  // 실용적 방식: data에 prevM/prevY 저장, 금일 입력 시 누적 = prev + 금일
+  if(r.prevMItem === undefined) r.prevMItem = Math.max(0, (r.mItem||0) - (r.tItem||0));
+  if(r.prevMQty  === undefined) r.prevMQty  = Math.max(0, (r.mQty||0)  - (r.tQty||0));
+  if(r.prevYItem === undefined) r.prevYItem = Math.max(0, (r.yItem||0) - (r.tItem||0));
+  if(r.prevYQty  === undefined) r.prevYQty  = Math.max(0, (r.yQty||0)  - (r.tQty||0));
+  r.mItem = r.prevMItem + Number(r.tItem||0);
+  r.mQty  = r.prevMQty  + Number(r.tQty||0);
+  r.yItem = r.prevYItem + Number(r.tItem||0);
+  r.yQty  = r.prevYQty  + Number(r.tQty||0);
+  const mItemEl = document.getElementById(`m-${p}-${i}-mItem`);
+  const mQtyEl  = document.getElementById(`m-${p}-${i}-mQty`);
+  const yItemEl = document.getElementById(`m-${p}-${i}-yItem`);
+  const yQtyEl  = document.getElementById(`m-${p}-${i}-yQty`);
+  if(mItemEl) mItemEl.value = r.mItem;
+  if(mQtyEl)  mQtyEl.value  = r.mQty;
+  if(yItemEl) yItemEl.value = r.yItem;
+  if(yQtyEl)  yQtyEl.value  = r.yQty;
+  updateSubtotal(p);
+  markDirty();
+}
+
+function updateSubtotal(p) {
+  const arr = p===1 ? data.plant1 : data.plant2;
+  const keys = ['tItem','tQty','mItem','mQty','yItem','yQty'];
+  keys.forEach(k => {
+    const el = document.getElementById(`sub-${p}-${k}`);
+    if(el) el.textContent = arr.reduce((a,r)=>a+Number(r[k]||0),0).toLocaleString();
+  });
+  updateTotal();
+}
+
+function updateTotal() {
+  const all = [...data.plant1, ...data.plant2];
+  ['tItem','tQty','mItem','mQty','yItem','yQty'].forEach(k => {
+    const el = document.getElementById(`tot-${k}`);
+    if(el) el.textContent = all.reduce((a,r)=>a+Number(r[k]||0),0).toLocaleString();
+  });
+}
+
+// ── 보고서 렌더 ──
+function renderReport() {
+  const allRows = [...data.plant1, ...data.plant2];
+  const todayItem = allRows.reduce((a,r)=>a+Number(r.tItem||0),0);
+  const todayQty  = allRows.reduce((a,r)=>a+Number(r.tQty||0),0);
+  const monthItem = allRows.reduce((a,r)=>a+Number(r.mItem||0),0);
+  const monthQty  = allRows.reduce((a,r)=>a+Number(r.mQty||0),0);
+  const yearItem  = allRows.reduce((a,r)=>a+Number(r.yItem||0),0);
+  const yearQty   = allRows.reduce((a,r)=>a+Number(r.yQty||0),0);
+
+  // 전일 대비: 월누적 - 금일 = 전일까지 누적
+  const prevItem = monthItem - todayItem;
+  const prevQty  = monthQty  - todayQty;
+  const diffItem = todayItem - prevItem;
+  const diffQty  = todayQty  - prevQty;
+  const signItem = diffItem >= 0 ? '+' : '';
+  const signQty  = diffQty  >= 0 ? '+' : '';
+  const colorItem = diffItem >= 0 ? '#2f7d4f' : '#a32d2d';
+  const colorQty  = diffQty  >= 0 ? '#2f7d4f' : '#a32d2d';
+
+  const cards = document.getElementById('summary-cards');
+  cards.innerHTML = `
+    <div class="sum-card" style="border-top:3px solid #378ADD">
+      <div class="sum-card-label">금일 (${mm}월 ${dd}일)</div>
+      <div class="sum-card-values" style="justify-content:center">
+        <div class="sum-card-val">
+          <div class="vl">품목</div>
+          <div class="vn">${todayItem.toLocaleString()}</div>
+        </div>
+        <div style="width:0.5px;background:#e0e0da;margin:4px 0"></div>
+        <div class="sum-card-val">
+          <div class="vl">수량</div>
+          <div class="vn">${todayQty.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid ${diffItem>=0?'#2f7d4f':'#a32d2d'}">
+      <div class="sum-card-label">전일 대비 증감</div>
+      <div class="sum-card-values" style="justify-content:center;gap:36px">
+        <div class="sum-card-val">
+          <div class="vl">품목</div>
+          <div class="vn" style="color:${colorItem};font-size:22px">${signItem}${diffItem.toLocaleString()}</div>
+        </div>
+        <div style="width:0.5px;background:#e0e0da;margin:4px 0"></div>
+        <div class="sum-card-val">
+          <div class="vl">수량</div>
+          <div class="vn" style="color:${colorQty};font-size:22px">${signQty}${diffQty.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>
+    <div class="sum-card" style="border-top:3px solid #888">
+      <div class="sum-card-label">금일 품질점검 이슈</div>
+      <div style="font-size:14px;color:#1a1a1a;margin-top:8px;text-align:left;min-height:36px;line-height:1.7;white-space:pre-wrap">${data.remarks || ''}</div>
+    </div>`;
+
+  // 1. 검사현황
+  const stbody = document.getElementById('status-tbody');
+  stbody.innerHTML = '';
+  [[data.plant1,'1공장'],[data.plant2,'2공장']].forEach(([rows, label]) => {
+    const si = rows.reduce((a,r)=>a+Number(r.tItem||0),0);
+    const sq = rows.reduce((a,r)=>a+Number(r.tQty||0),0);
+    const mi = rows.reduce((a,r)=>a+Number(r.mItem||0),0);
+    const mq = rows.reduce((a,r)=>a+Number(r.mQty||0),0);
+    const yi = rows.reduce((a,r)=>a+Number(r.yItem||0),0);
+    const yq = rows.reduce((a,r)=>a+Number(r.yQty||0),0);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="group-cell">${label}</td>
+      <td>${si.toLocaleString()}</td><td>${sq.toLocaleString()}</td>
+      <td>${mi.toLocaleString()}</td><td>${mq.toLocaleString()}</td>
+      <td>${yi.toLocaleString()}</td><td>${yq.toLocaleString()}</td>`;
+    stbody.appendChild(tr);
+  });
+  const totalTr = document.createElement('tr');
+  totalTr.className = 'total-row';
+  totalTr.innerHTML = `<td>합계</td>
+    <td>${todayItem.toLocaleString()}</td><td>${todayQty.toLocaleString()}</td>
+    <td>${monthItem.toLocaleString()}</td><td>${monthQty.toLocaleString()}</td>
+    <td>${yearItem.toLocaleString()}</td><td>${yearQty.toLocaleString()}</td>`;
+  stbody.appendChild(totalTr);
+
+  // 2. 검사내용
+  const dtbody = document.getElementById('detail-tbody');
+  dtbody.innerHTML = '';
+  let rowNum = 1;
+  [[data.plant1,'1공장'],[data.plant2,'2공장']].forEach(([rows, label]) => {
+    rows.forEach((r, i) => {
+      const tr = document.createElement('tr');
+      let html = '';
+      if(i===0) html += `<td class="group-cell" rowspan="${rows.length}" style="font-size:12px">${label}</td>`;
+      html += `<td>${r.line}</td><td>${r.inspector}</td><td>${Number(r.tItem).toLocaleString()}</td><td>${Number(r.tQty).toLocaleString()}</td><td>${r.note||'–'}</td>`;
+      tr.innerHTML = `<td style="color:#888;font-size:12px;text-align:center">${rowNum++}</td>${html}`;
+      dtbody.appendChild(tr);
+    });
+    const si = rows.reduce((a,r)=>a+Number(r.tItem||0),0);
+    const sq = rows.reduce((a,r)=>a+Number(r.tQty||0),0);
+    const subTr = document.createElement('tr');
+    subTr.className = 'subtotal-row';
+    subTr.innerHTML = `<td colspan="4">소계</td><td>${si.toLocaleString()}</td><td>${sq.toLocaleString()}</td><td>–</td>`;
+    dtbody.appendChild(subTr);
+  });
+  const grandTr = document.createElement('tr');
+  grandTr.className = 'total-row';
+  grandTr.innerHTML = `<td colspan="4">합계</td><td>${todayItem.toLocaleString()}</td><td>${todayQty.toLocaleString()}</td><td>–</td>`;
+  dtbody.appendChild(grandTr);
+
+  document.getElementById('r-remarks').textContent = data.remarks || '';
+}
+
+// ── 입력 탭 렌더 ──
+function renderInputs() {
+  [1,2].forEach(p => {
+    const tbody = document.getElementById(`plant${p}-tbody`);
+    tbody.innerHTML = '';
+    const arr = p===1 ? data.plant1 : data.plant2;
+    arr.forEach((r,i) => { tbody.innerHTML += rowHTML(p,i,r); });
+    // 소계 행
+    tbody.innerHTML += `<tr style="background:#f0f4fa;font-weight:600">
+      <td class="label-cell" style="font-weight:700">소계</td>
+      <td></td>
+      <td id="sub-${p}-tItem" style="text-align:center;color:#1a1a1a">-</td>
+      <td id="sub-${p}-tQty"  style="text-align:center;color:#1a1a1a">-</td>
+      <td id="sub-${p}-mItem" class="subtotal-calc">-</td>
+      <td id="sub-${p}-mQty"  class="subtotal-calc">-</td>
+      <td id="sub-${p}-yItem" class="subtotal-calc">-</td>
+      <td id="sub-${p}-yQty"  class="subtotal-calc">-</td>
+    </tr>`;
+    updateSubtotal(p);
+  });
+
+  // 합계 행 (plant2 아래)
+  const p2body = document.getElementById('plant2-tbody');
+  if(!document.getElementById('tot-row')) {
+    const tr = document.createElement('tr');
+    tr.id = 'tot-row';
+    tr.style.cssText = 'background:#ddeaf9;font-weight:700;color:#185fa5';
+    tr.innerHTML = `<td class="label-cell" style="font-weight:700;color:#185fa5">합계</td>
+      <td></td>
+      <td id="tot-tItem" style="text-align:center">-</td>
+      <td id="tot-tQty"  style="text-align:center">-</td>
+      <td id="tot-mItem" style="text-align:center">-</td>
+      <td id="tot-mQty"  style="text-align:center">-</td>
+      <td id="tot-yItem" style="text-align:center">-</td>
+      <td id="tot-yQty"  style="text-align:center">-</td>`;
+    p2body.appendChild(tr);
+  }
+  updateTotal();
+  document.getElementById('m-remarks').value = data.remarks || '';
+}
+
+function rowHTML(p, i, r) {
+  const inStyle = `width:68px;padding:4px;border:0.5px solid #ddd;border-radius:4px;font-size:12px;text-align:center`;
+  const roStyle = `${inStyle};background:#f5f5f3;color:#555`;
+  return `<tr id="row-${p}-${i}">
+    <td><input type="text" style="width:100%;padding:4px 6px;border:0.5px solid #ddd;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif" value="${r.line}" oninput="updateField(${p},${i},'line',this.value)"></td>
+    <td><input type="text" style="width:60px;padding:4px;border:0.5px solid #ddd;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;text-align:center" value="${r.inspector}" oninput="updateField(${p},${i},'inspector',this.value)"></td>
+    <td><input type="number" min="0" style="${inStyle}" value="${r.tItem}" oninput="updateField(${p},${i},'tItem',+this.value);recalcRow(${p},${i})"></td>
+    <td><input type="number" min="0" style="${inStyle}" value="${r.tQty}"  oninput="updateField(${p},${i},'tQty', +this.value);recalcRow(${p},${i})"></td>
+    <td><input type="number" min="0" style="${roStyle}" id="m-${p}-${i}-mItem" value="${r.mItem}" readonly></td>
+    <td><input type="number" min="0" style="${roStyle}" id="m-${p}-${i}-mQty"  value="${r.mQty}"  readonly></td>
+    <td><input type="number" min="0" style="${roStyle}" id="m-${p}-${i}-yItem" value="${r.yItem}" readonly></td>
+    <td><input type="number" min="0" style="${roStyle}" id="m-${p}-${i}-yQty"  value="${r.yQty}"  readonly></td>
+  </tr>`;
+}
+
+function updateField(p, i, key, val) {
+  const arr = p===1 ? data.plant1 : data.plant2;
+  arr[i][key] = val;
+  markDirty();
+}
+
+function addRow(p) {
+  const arr = p===1 ? data.plant1 : data.plant2;
+  arr.push({line:'', inspector:'', tItem:0, tQty:0, mItem:0, mQty:0, yItem:0, yQty:0, note:''});
+  markDirty();
+  renderInputs();
+}
+
+function removeRow(p, i) {
+  const arr = p===1 ? data.plant1 : data.plant2;
+  if(arr.length <= 1) { showToast('최소 1개 라인이 필요합니다'); return; }
+  arr.splice(i,1);
+  markDirty();
+  renderInputs();
+}
+
+function calcSubtotal(rows) {
+  return {
+    item: rows.reduce((a,r)=>a+Number(r.tItem||0),0),
+    qty:  rows.reduce((a,r)=>a+Number(r.tQty||0),0),
+  };
+}
+
+async function applyData() {
+  data.remarks = document.getElementById('m-remarks').value;
+  switchTab('report');
+  await saveSharedData();
+}
+
+function resetData() {
+  if(!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+  data.plant1 = [{line:'',inspector:'',tItem:0,tQty:0,mItem:0,mQty:0,yItem:0,yQty:0,prevMItem:0,prevMQty:0,prevYItem:0,prevYQty:0,note:''}];
+  data.plant2 = [{line:'',inspector:'',tItem:0,tQty:0,mItem:0,mQty:0,yItem:0,yQty:0,prevMItem:0,prevMQty:0,prevYItem:0,prevYQty:0,note:''}];
+  data.kpi = { mItem:0, mQty:0, yItem:0, yQty:0, prevItem:0, prevQty:0 };
+  data.remarks = '';
+  document.getElementById('tot-row')?.remove();
+  markDirty();
+  renderInputs();
+  showToast('초기화되었습니다');
+}
+
+async function saveSharedData() {
+  if(!isSharedSyncConfigured()) {
+    setSyncStatus('Apps Script 연결 필요', 'error');
+    showToast('README의 Apps Script 연결 설정을 완료해주세요');
+    return;
+  }
+  setSyncStatus('Google Sheets에 저장 중');
+  try {
+    await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({payload:JSON.stringify({state:data,updatedBy:navigator.userAgent})})
+    });
+    hasUnsavedChanges = false;
+    setSyncStatus('실시간 동기화 중', 'ready');
+    showToast('보고서와 Google Sheets에 저장했습니다');
+  } catch(error) {
+    console.error(error);
+    setSyncStatus('저장 실패', 'error');
+    showToast('Google Sheets 저장에 실패했습니다');
+  }
+}
+
+function loadSharedData(showMessage = false) {
+  if(!isSharedSyncConfigured()) {
+    setSyncStatus('Apps Script 연결 필요', 'error');
+    if(showMessage) showToast('README의 Apps Script 연결 설정을 완료해주세요');
+    return;
+  }
+  if(hasUnsavedChanges && !showMessage) return;
+  setSyncStatus('최신 데이터 확인 중');
+  const callbackName = `sharedStateCallback_${Date.now()}`;
+  const script = document.createElement('script');
+  window[callbackName] = payload => {
+    try {
+      if(payload && payload.state && (!hasUnsavedChanges || showMessage)) {
+        data = payload.state;
+        document.getElementById('tot-row')?.remove();
+        renderReport();
+        renderInputs();
+        hasUnsavedChanges = false;
+        if(showMessage) showToast('최신 데이터를 불러왔습니다');
+      }
+      setSyncStatus('실시간 동기화 중', 'ready');
+    } catch(error) {
+      console.error(error);
+      setSyncStatus('불러오기 실패', 'error');
+    } finally {
+      delete window[callbackName];
+      script.remove();
+    }
+  };
+  script.onerror = () => {
+    delete window[callbackName];
+    script.remove();
+    setSyncStatus('연결 실패', 'error');
+  };
+  script.src = `${GOOGLE_SHEETS_WEB_APP_URL}?callback=${callbackName}&t=${Date.now()}`;
+  document.body.appendChild(script);
+}
+
+// ── 이미지 복사 ──
+function loadHtml2Canvas() {
+  if(window.html2canvas) return Promise.resolve(window.html2canvas);
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    s.onload=()=>resolve(window.html2canvas);
+    s.onerror=()=>reject(new Error('html2canvas load failed'));
+    document.head.appendChild(s);
+  });
+}
+
+async function copyReportImage() {
+  try {
+    renderReport();
+    showToast('이미지를 만드는 중입니다…');
+    const capture = await loadHtml2Canvas();
+    const page = document.getElementById('report-page');
+    const tabBar = document.querySelector('.tab-bar');
+    const actions = document.querySelector('.report-actions');
+    page.classList.add('capture-sharp');
+    if(tabBar) tabBar.style.display='none';
+    if(actions) actions.style.display='none';
+    await document.fonts?.ready;
+    const scale = Math.max(3, Math.min(5, Math.ceil((window.devicePixelRatio||1)*2)));
+    let canvas;
+    try {
+      canvas = await capture(page, {backgroundColor:'#ffffff', scale, useCORS:true, scrollX:0, scrollY:-window.scrollY});
+    } finally {
+      page.classList.remove('capture-sharp');
+      if(tabBar) tabBar.style.display='';
+      if(actions) actions.style.display='';
+    }
+    canvas.toBlob(async blob => {
+      if(!blob){ showToast('이미지 생성 실패'); return; }
+      try {
+        if(navigator.clipboard && window.ClipboardItem && window.isSecureContext) {
+          await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+          showToast('이미지가 복사되었습니다');
+          return;
+        }
+      } catch(e){ console.warn(e); }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href=url; a.download=`packaging-inspection-${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}.png`;
+      a.click(); URL.revokeObjectURL(url);
+      showToast('PNG로 저장했습니다');
+    }, 'image/png');
+  } catch(e) {
+    document.getElementById('report-page')?.classList.remove('capture-sharp');
+    console.error(e); showToast('이미지 복사에 실패했습니다');
+  }
+}
+
+function showToast(msg, dur=2200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), dur);
+}
+
+// 초기화
+renderReport();
+renderInputs();
+document.getElementById('m-remarks').addEventListener('input', markDirty);
+loadSharedData();
+setInterval(()=>loadSharedData(false), APP_CONFIG.syncIntervalMs || 15000);
 </script>
 </body>
 </html>
