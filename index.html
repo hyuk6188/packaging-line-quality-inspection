@@ -208,6 +208,12 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 ══════════════════════════ -->
 <div id="tab-input" class="tab-content">
 
+  <!-- KPI 금일 품질점검 이슈 입력 -->
+  <div class="input-section">
+    <div class="input-section-title">KPI 금일 품질점검 이슈 입력</div>
+    <textarea id="m-kpi-issue" style="width:100%;height:100px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.7" placeholder="KPI 카드에 표시할 금일 품질점검 이슈를 입력하세요"></textarea>
+  </div>
+
   <!-- 1공장 -->
   <div class="input-section">
     <div class="input-section-title">1공장 포장라인</div>
@@ -305,6 +311,7 @@ let data = {
     {line:'일룸 포장',   inspector:'이용근', tItem:7, tQty:80,  mItem:35, mQty:400,  yItem:35, yQty:400,  note:''},
   ],
   kpi: { mItem:0, mQty:0, yItem:0, yQty:0, prevItem:0, prevQty:0 },
+  kpiIssue: '',
   remarks: '',
 };
 
@@ -434,7 +441,7 @@ function renderReport() {
     </div>
     <div class="sum-card" style="border-top:3px solid #888">
       <div class="sum-card-label">금일 품질점검 이슈</div>
-      <div style="font-size:14px;color:#1a1a1a;margin-top:8px;text-align:left;min-height:36px;line-height:1.7;white-space:pre-wrap">${data.remarks || ''}</div>
+      <div style="font-size:14px;color:#1a1a1a;margin-top:8px;text-align:left;min-height:36px;line-height:1.7;white-space:pre-wrap">${data.kpiIssue || ''}</div>
     </div>`;
 
   // 1. 검사현황
@@ -530,6 +537,7 @@ function renderInputs() {
     p2body.appendChild(tr);
   }
   updateTotal();
+  document.getElementById('m-kpi-issue').value = data.kpiIssue || '';
   document.getElementById('m-remarks').value = data.remarks || '';
 }
 
@@ -578,6 +586,7 @@ function calcSubtotal(rows) {
 }
 
 async function applyData() {
+  data.kpiIssue = document.getElementById('m-kpi-issue').value;
   data.remarks = document.getElementById('m-remarks').value;
   switchTab('report');
   await saveSharedData();
@@ -588,6 +597,7 @@ function resetData() {
   data.plant1 = [{line:'',inspector:'',tItem:0,tQty:0,mItem:0,mQty:0,yItem:0,yQty:0,prevMItem:0,prevMQty:0,prevYItem:0,prevYQty:0,note:''}];
   data.plant2 = [{line:'',inspector:'',tItem:0,tQty:0,mItem:0,mQty:0,yItem:0,yQty:0,prevMItem:0,prevMQty:0,prevYItem:0,prevYQty:0,note:''}];
   data.kpi = { mItem:0, mQty:0, yItem:0, yQty:0, prevItem:0, prevQty:0 };
+  data.kpiIssue = '';
   data.remarks = '';
   document.getElementById('tot-row')?.remove();
   markDirty();
@@ -720,6 +730,7 @@ function showToast(msg, dur=2200) {
 // 초기화
 renderReport();
 renderInputs();
+document.getElementById('m-kpi-issue').addEventListener('input', markDirty);
 document.getElementById('m-remarks').addEventListener('input', markDirty);
 loadSharedData();
 setInterval(()=>loadSharedData(false), APP_CONFIG.syncIntervalMs || 15000);
