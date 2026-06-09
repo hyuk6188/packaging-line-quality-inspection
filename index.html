@@ -46,7 +46,7 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 .attach-list li::before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#378ADD}
 
 /* 액션 버튼 */
-.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
+.report-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1.5rem}
 .image-copy-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#2f7d4f;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
 .image-copy-btn:hover{background:#25663f}
 .print-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;background:#378ADD;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer}
@@ -254,7 +254,6 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 
   <div class="btn-row">
     <button class="btn btn-primary" onclick="applyData()">보고서에 적용 및 저장</button>
-    <button class="btn btn-secondary" onclick="loadSharedData(true)">최신 데이터 불러오기</button>
     <button class="btn btn-danger" onclick="resetData()">초기화</button>
   </div>
 </div>
