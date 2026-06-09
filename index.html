@@ -408,6 +408,13 @@ function renderReport() {
   const signQty  = diffQty  >= 0 ? '+' : '';
   const colorItem = diffItem >= 0 ? '#2f7d4f' : '#a32d2d';
   const colorQty  = diffQty  >= 0 ? '#2f7d4f' : '#a32d2d';
+  const formatRate = (diff, previous) => {
+    const rate = previous ? (diff / previous) * 100 : (diff ? 100 : 0);
+    const rounded = Math.round(rate * 10) / 10;
+    return `${rounded > 0 ? '+' : ''}${rounded.toLocaleString()}%`;
+  };
+  const diffItemRate = formatRate(diffItem, prevItem);
+  const diffQtyRate = formatRate(diffQty, prevQty);
 
   const cards = document.getElementById('summary-cards');
   cards.innerHTML = `
@@ -430,12 +437,12 @@ function renderReport() {
       <div class="sum-card-values" style="justify-content:center;gap:36px">
         <div class="sum-card-val">
           <div class="vl">품목</div>
-          <div class="vn" style="color:${colorItem};font-size:22px">${signItem}${diffItem.toLocaleString()}</div>
+          <div class="vn" style="color:${colorItem};font-size:22px;white-space:nowrap">${signItem}${diffItem.toLocaleString()} <span style="font-size:13px">(${diffItemRate})</span></div>
         </div>
         <div style="width:0.5px;background:#e0e0da;margin:4px 0"></div>
         <div class="sum-card-val">
           <div class="vl">수량</div>
-          <div class="vn" style="color:${colorQty};font-size:22px">${signQty}${diffQty.toLocaleString()}</div>
+          <div class="vn" style="color:${colorQty};font-size:22px;white-space:nowrap">${signQty}${diffQty.toLocaleString()} <span style="font-size:13px">(${diffQtyRate})</span></div>
         </div>
       </div>
     </div>
