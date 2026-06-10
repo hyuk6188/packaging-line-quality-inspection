@@ -226,14 +226,6 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
   <!-- KPI 금일 품질점검 이슈 입력 -->
   <div class="input-section">
     <div class="input-section-title">KPI 금일 품질점검 이슈 입력</div>
-    <div style="display:flex;gap:12px;margin-bottom:12px">
-      <label style="flex:1;font-size:14px;font-weight:600;color:#555">전일 품목
-        <input id="m-prev-item" type="number" min="0" style="display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #d0d8e8;border-radius:6px;font-size:15px" placeholder="전일 품목 합계">
-      </label>
-      <label style="flex:1;font-size:14px;font-weight:600;color:#555">전일 수량
-        <input id="m-prev-qty" type="number" min="0" style="display:block;width:100%;margin-top:6px;padding:10px;border:1px solid #d0d8e8;border-radius:6px;font-size:15px" placeholder="전일 수량 합계">
-      </label>
-    </div>
     <textarea id="m-kpi-issue" style="width:100%;height:100px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:15px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.7" placeholder="KPI 카드에 표시할 금일 품질점검 이슈를 입력하세요"></textarea>
   </div>
 
@@ -336,6 +328,7 @@ let data = {
   kpi: { mItem:0, mQty:0, yItem:0, yQty:0, prevItem:201, prevQty:3572 },
   kpiIssue: '',
   remarks: '',
+  reportDate: '',
 };
 
 // 날짜
@@ -347,11 +340,27 @@ else now.setDate(now.getDate()-1);
 const yyyy = now.getFullYear();
 const mm = now.getMonth()+1;
 const dd = now.getDate();
+const currentReportDate = `${yyyy}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+data.reportDate = currentReportDate;
 document.getElementById('r-date').textContent = `${yyyy}년 ${mm}월 ${dd}일`;
 document.getElementById('th-today').textContent = `${mm}월 ${dd}일`;
 document.getElementById('th-today').colSpan = 2;
 document.getElementById('th-month').textContent = `${mm}월 누적`;
 document.getElementById('th-month').colSpan = 2;
+
+function advancePreviousDayIfNeeded(state) {
+  if(!state.reportDate) {
+    state.reportDate = currentReportDate;
+    return false;
+  }
+  if(state.reportDate === currentReportDate) return false;
+  const rows = [...(state.plant1 || []), ...(state.plant2 || [])];
+  state.kpi = state.kpi || {};
+  state.kpi.prevItem = rows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
+  state.kpi.prevQty = rows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  state.reportDate = currentReportDate;
+  return true;
+}
 
 // ── 탭 전환 ──
 function switchTab(t) {
@@ -567,8 +576,6 @@ function renderInputs() {
     p2body.appendChild(tr);
   }
   updateTotal();
-  document.getElementById('m-prev-item').value = Number(data.kpi?.prevItem || 0);
-  document.getElementById('m-prev-qty').value = Number(data.kpi?.prevQty || 0);
   document.getElementById('m-kpi-issue').value = data.kpiIssue || '';
   document.getElementById('m-remarks').value = data.remarks || '';
 }
@@ -619,8 +626,7 @@ function calcSubtotal(rows) {
 
 async function applyData() {
   data.kpi = data.kpi || {};
-  data.kpi.prevItem = Number(document.getElementById('m-prev-item').value || 0);
-  data.kpi.prevQty = Number(document.getElementById('m-prev-qty').value || 0);
+  data.reportDate = currentReportDate;
   data.kpiIssue = document.getElementById('m-kpi-issue').value;
   data.remarks = document.getElementById('m-remarks').value;
   switchTab('report');
@@ -678,10 +684,11 @@ function loadSharedData(showMessage = false) {
     try {
       if(payload && payload.state && (!hasUnsavedChanges || showMessage)) {
         data = payload.state;
+        const advancedPreviousDay = advancePreviousDayIfNeeded(data);
         document.getElementById('tot-row')?.remove();
         renderReport();
         renderInputs();
-        hasUnsavedChanges = false;
+        hasUnsavedChanges = advancedPreviousDay;
         if(showMessage) showToast('최신 데이터를 불러왔습니다');
       }
       setSyncStatus('실시간 동기화 중', 'ready');
@@ -769,8 +776,6 @@ function showToast(msg, dur=2200) {
 renderReport();
 renderInputs();
 document.getElementById('m-kpi-issue').addEventListener('input', markDirty);
-document.getElementById('m-prev-item').addEventListener('input', markDirty);
-document.getElementById('m-prev-qty').addEventListener('input', markDirty);
 document.getElementById('m-remarks').addEventListener('input', markDirty);
 loadSharedData();
 setInterval(()=>loadSharedData(false), APP_CONFIG.syncIntervalMs || 15000);
