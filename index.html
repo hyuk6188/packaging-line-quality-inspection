@@ -366,6 +366,15 @@ function advancePreviousDayIfNeeded(state) {
   state.kpi = state.kpi || {};
   state.kpi.prevItem = rows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
   state.kpi.prevQty = rows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  rows.forEach(row => {
+    row.prevMItem = Number(row.mItem || 0);
+    row.prevMQty = Number(row.mQty || 0);
+    row.prevYItem = Number(row.yItem || 0);
+    row.prevYQty = Number(row.yQty || 0);
+    row.tItem = 0;
+    row.tQty = 0;
+    row.note = '';
+  });
   state.reportDate = currentReportDate;
   return true;
 }
