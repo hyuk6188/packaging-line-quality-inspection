@@ -224,6 +224,13 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 ══════════════════════════ -->
 <div id="tab-input" class="tab-content">
 
+  <div class="input-section">
+    <div class="input-section-title">엑셀 일괄 입력</div>
+    <div style="font-size:13px;color:#666;margin-bottom:8px">엑셀 열 순서: 사업장 / 포장라인 / 검사자 / 금일 품목 / 금일 수량 / 비고</div>
+    <textarea id="excel-paste-input" style="width:100%;height:130px;padding:12px;border:1px solid #d0d8e8;border-radius:8px;font-size:14px;font-family:'Noto Sans KR',sans-serif;resize:vertical;background:#fff;color:#1a1a1a;line-height:1.6" placeholder="엑셀에서 헤더와 데이터 범위를 복사한 뒤 여기에 붙여넣으세요."></textarea>
+    <button class="btn btn-secondary" style="margin-top:8px" onclick="importExcelPaste()">붙여넣기 데이터 반영</button>
+  </div>
+
   <!-- KPI 금일 품질점검 이슈 입력 -->
   <div class="input-section">
     <div class="input-section-title">KPI 금일 품질점검 이슈 입력</div>
@@ -601,6 +608,73 @@ function updateField(p, i, key, val) {
   const arr = p===1 ? data.plant1 : data.plant2;
   arr[i][key] = val;
   markDirty();
+}
+
+function parseExcelNumber(value) {
+  const normalized = String(value ?? '').replace(/,/g, '').trim();
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function buildImportedRow(existing, line, inspector, tItem, tQty, note) {
+  const previous = existing || {};
+  const prevMItem = Number(previous.prevMItem ?? Math.max(0, Number(previous.mItem || 0) - Number(previous.tItem || 0)));
+  const prevMQty = Number(previous.prevMQty ?? Math.max(0, Number(previous.mQty || 0) - Number(previous.tQty || 0)));
+  const prevYItem = Number(previous.prevYItem ?? Math.max(0, Number(previous.yItem || 0) - Number(previous.tItem || 0)));
+  const prevYQty = Number(previous.prevYQty ?? Math.max(0, Number(previous.yQty || 0) - Number(previous.tQty || 0)));
+  return {
+    line, inspector, tItem, tQty, note,
+    prevMItem, prevMQty, prevYItem, prevYQty,
+    mItem: prevMItem + tItem, mQty: prevMQty + tQty,
+    yItem: prevYItem + tItem, yQty: prevYQty + tQty
+  };
+}
+
+function importExcelPaste() {
+  const text = document.getElementById('excel-paste-input').value.trim();
+  if(!text) {
+    showToast('엑셀 데이터를 붙여넣어 주세요');
+    return;
+  }
+  const rows = text.split(/\r?\n/).map(row => row.split('\t').map(cell => cell.trim())).filter(row => row.some(Boolean));
+  const first = rows[0].map(value => value.replace(/\s/g, ''));
+  const hasHeader = first.some(value => ['번호','사업장','포장라인','검사자','품목','수량','금일품목','금일수량','비고'].includes(value));
+  const header = hasHeader ? first : ['사업장','포장라인','검사자','금일품목','금일수량','비고'];
+  const values = hasHeader ? rows.slice(1) : rows;
+  const column = (...names) => names.map(name => header.indexOf(name)).find(index => index >= 0) ?? -1;
+  const imported = {1: [], 2: []};
+  let lastPlant = 0;
+
+  values.forEach(row => {
+    const line = row[column('포장라인')] || '';
+    if(!line) return;
+    const plantText = row[column('사업장')] || '';
+    let plant = plantText.includes('2') ? 2 : plantText.includes('1') ? 1 : 0;
+    if(plant) lastPlant = plant;
+    if(!plant && lastPlant) plant = lastPlant;
+    if(!plant) {
+      if(data.plant2.some(item => item.line === line)) plant = 2;
+      else plant = 1;
+    }
+    const inspector = row[column('검사자')] || '';
+    const tItem = parseExcelNumber(row[column('금일품목', '품목')]);
+    const tQty = parseExcelNumber(row[column('금일수량', '수량')]);
+    const noteIndex = column('비고');
+    const note = noteIndex >= 0 ? row[noteIndex] || '' : '';
+    const existing = (plant === 1 ? data.plant1 : data.plant2).find(item => item.line === line);
+    imported[plant].push(buildImportedRow(existing, line, inspector, tItem, tQty, note));
+  });
+
+  if(!imported[1].length && !imported[2].length) {
+    showToast('반영할 포장라인 데이터가 없습니다');
+    return;
+  }
+  if(imported[1].length) data.plant1 = imported[1];
+  if(imported[2].length) data.plant2 = imported[2];
+  document.getElementById('tot-row')?.remove();
+  markDirty();
+  renderInputs();
+  showToast(`엑셀 데이터 ${imported[1].length + imported[2].length}건을 반영했습니다`);
 }
 
 function addRow(p) {
