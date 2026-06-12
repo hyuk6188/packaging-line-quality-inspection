@@ -300,6 +300,7 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
 const APP_CONFIG = window.APP_CONFIG || {};
 const GOOGLE_SHEETS_WEB_APP_URL = APP_CONFIG.googleSheetsWebAppUrl || '';
 let hasUnsavedChanges = false;
+let loadedReportState = null;
 
 function isSharedSyncConfigured() {
   return GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/');
@@ -356,6 +357,16 @@ document.getElementById('th-today').colSpan = 2;
 document.getElementById('th-month').textContent = `${mm}월 누적`;
 document.getElementById('th-month').colSpan = 2;
 
+function updateReportDateLabels() {
+  const parts = String(data.reportDate || currentReportDate).split('-').map(Number);
+  const reportYear = parts[0] || yyyy;
+  const reportMonth = parts[1] || mm;
+  const reportDay = parts[2] || dd;
+  document.getElementById('r-date').textContent = `${reportYear}년 ${reportMonth}월 ${reportDay}일`;
+  document.getElementById('th-today').textContent = `${reportMonth}월 ${reportDay}일`;
+  document.getElementById('th-month').textContent = `${reportMonth}월 누적`;
+}
+
 function advancePreviousDayIfNeeded(state) {
   if(!state.reportDate) {
     state.reportDate = currentReportDate;
@@ -377,6 +388,34 @@ function advancePreviousDayIfNeeded(state) {
   });
   state.reportDate = currentReportDate;
   return true;
+}
+
+function prepareNewReportForSave() {
+  if(!loadedReportState || loadedReportState.reportDate === currentReportDate) {
+    data.reportDate = currentReportDate;
+    return;
+  }
+  data.history = data.history || {};
+  if(loadedReportState.reportDate) {
+    data.history[loadedReportState.reportDate] = loadedReportState;
+  }
+  const previousRows = [...(loadedReportState.plant1 || []), ...(loadedReportState.plant2 || [])];
+  const currentRows = [...(data.plant1 || []), ...(data.plant2 || [])];
+  data.kpi = data.kpi || {};
+  data.kpi.prevItem = previousRows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
+  data.kpi.prevQty = previousRows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  currentRows.forEach(row => {
+    const previous = previousRows.find(item => item.line === row.line) || {};
+    row.prevMItem = Number(previous.mItem || 0);
+    row.prevMQty = Number(previous.mQty || 0);
+    row.prevYItem = Number(previous.yItem || 0);
+    row.prevYQty = Number(previous.yQty || 0);
+    row.mItem = row.prevMItem + Number(row.tItem || 0);
+    row.mQty = row.prevMQty + Number(row.tQty || 0);
+    row.yItem = row.prevYItem + Number(row.tItem || 0);
+    row.yQty = row.prevYQty + Number(row.tQty || 0);
+  });
+  data.reportDate = currentReportDate;
 }
 
 // ── 탭 전환 ──
@@ -440,6 +479,7 @@ function updateTotal() {
 
 // ── 보고서 렌더 ──
 function renderReport() {
+  updateReportDateLabels();
   const allRows = [...data.plant1, ...data.plant2];
   const todayItem = allRows.reduce((a,r)=>a+Number(r.tItem||0),0);
   const todayQty  = allRows.reduce((a,r)=>a+Number(r.tQty||0),0);
@@ -710,7 +750,7 @@ function calcSubtotal(rows) {
 
 async function applyData() {
   data.kpi = data.kpi || {};
-  data.reportDate = currentReportDate;
+  prepareNewReportForSave();
   data.kpiIssue = document.getElementById('m-kpi-issue').value;
   data.remarks = document.getElementById('m-remarks').value;
   switchTab('report');
@@ -744,6 +784,7 @@ async function saveSharedData() {
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:new URLSearchParams({payload:JSON.stringify({state:data,updatedBy:navigator.userAgent})})
     });
+    loadedReportState = JSON.parse(JSON.stringify(data));
     hasUnsavedChanges = false;
     setSyncStatus('실시간 동기화 중', 'ready');
     showToast('보고서와 Google Sheets에 저장했습니다');
@@ -768,11 +809,11 @@ function loadSharedData(showMessage = false) {
     try {
       if(payload && payload.state && (!hasUnsavedChanges || showMessage)) {
         data = payload.state;
-        const advancedPreviousDay = advancePreviousDayIfNeeded(data);
+        loadedReportState = JSON.parse(JSON.stringify(data));
         document.getElementById('tot-row')?.remove();
         renderReport();
         renderInputs();
-        hasUnsavedChanges = advancedPreviousDay;
+        hasUnsavedChanges = false;
         if(showMessage) showToast('최신 데이터를 불러왔습니다');
       }
       setSyncStatus('실시간 동기화 중', 'ready');
