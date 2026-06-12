@@ -480,6 +480,9 @@ function updateTotal() {
 // ── 보고서 렌더 ──
 function renderReport() {
   updateReportDateLabels();
+  const reportDateParts = String(data.reportDate || currentReportDate).split('-').map(Number);
+  const reportMonth = reportDateParts[1] || mm;
+  const reportDay = reportDateParts[2] || dd;
   const allRows = [...data.plant1, ...data.plant2];
   const todayItem = allRows.reduce((a,r)=>a+Number(r.tItem||0),0);
   const todayQty  = allRows.reduce((a,r)=>a+Number(r.tQty||0),0);
@@ -508,7 +511,7 @@ function renderReport() {
   const cards = document.getElementById('summary-cards');
   cards.innerHTML = `
     <div class="sum-card" style="border-top:3px solid #378ADD">
-      <div class="sum-card-label">금일 (${mm}월 ${dd}일)</div>
+      <div class="sum-card-label">금일 (${reportMonth}월 ${reportDay}일)</div>
       <div class="sum-card-values" style="justify-content:center">
         <div class="sum-card-val">
           <div class="vl">품목</div>
