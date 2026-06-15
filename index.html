@@ -301,6 +301,7 @@ const APP_CONFIG = window.APP_CONFIG || {};
 const GOOGLE_SHEETS_WEB_APP_URL = APP_CONFIG.googleSheetsWebAppUrl || '';
 let hasUnsavedChanges = false;
 let loadedReportState = null;
+let newReportDraftPrepared = false;
 
 function isSharedSyncConfigured() {
   return GOOGLE_SHEETS_WEB_APP_URL.startsWith('https://script.google.com/macros/s/');
@@ -418,13 +419,42 @@ function prepareNewReportForSave() {
   data.reportDate = currentReportDate;
 }
 
+function prepareNewReportDraft() {
+  if(newReportDraftPrepared || !loadedReportState || loadedReportState.reportDate === currentReportDate) return;
+  const previousRows = [...(loadedReportState.plant1 || []), ...(loadedReportState.plant2 || [])];
+  const currentRows = [...(data.plant1 || []), ...(data.plant2 || [])];
+  data.kpi = data.kpi || {};
+  data.kpi.prevItem = previousRows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
+  data.kpi.prevQty = previousRows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  currentRows.forEach(row => {
+    const previous = previousRows.find(item => item.line === row.line) || {};
+    row.prevMItem = Number(previous.mItem || 0);
+    row.prevMQty = Number(previous.mQty || 0);
+    row.prevYItem = Number(previous.yItem || 0);
+    row.prevYQty = Number(previous.yQty || 0);
+    row.tItem = 0;
+    row.tQty = 0;
+    row.note = '';
+    row.mItem = row.prevMItem;
+    row.mQty = row.prevMQty;
+    row.yItem = row.prevYItem;
+    row.yQty = row.prevYQty;
+  });
+  data.reportDate = currentReportDate;
+  newReportDraftPrepared = true;
+  hasUnsavedChanges = true;
+}
+
 // ── 탭 전환 ──
 function switchTab(t) {
   document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['report','input'][i]===t));
   document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
   if(t==='report') renderReport();
-  if(t==='input') renderInputs();
+  if(t==='input') {
+    prepareNewReportDraft();
+    renderInputs();
+  }
 }
 
 // ── 누적 자동 계산 ──
@@ -788,6 +818,7 @@ async function saveSharedData() {
       body:new URLSearchParams({payload:JSON.stringify({state:data,updatedBy:navigator.userAgent})})
     });
     loadedReportState = JSON.parse(JSON.stringify(data));
+    newReportDraftPrepared = false;
     hasUnsavedChanges = false;
     setSyncStatus('실시간 동기화 중', 'ready');
     showToast('보고서와 Google Sheets에 저장했습니다');
@@ -813,6 +844,7 @@ function loadSharedData(showMessage = false) {
       if(payload && payload.state && (!hasUnsavedChanges || showMessage)) {
         data = payload.state;
         loadedReportState = JSON.parse(JSON.stringify(data));
+        newReportDraftPrepared = false;
         document.getElementById('tot-row')?.remove();
         renderReport();
         renderInputs();
