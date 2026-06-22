@@ -398,7 +398,7 @@ function prepareNewReportForSave() {
   }
   data.history = data.history || {};
   if(loadedReportState.reportDate) {
-    data.history[loadedReportState.reportDate] = loadedReportState;
+    data.history[loadedReportState.reportDate] = buildReportHistorySummary(loadedReportState);
   }
   const previousRows = [...(loadedReportState.plant1 || []), ...(loadedReportState.plant2 || [])];
   const currentRows = [...(data.plant1 || []), ...(data.plant2 || [])];
@@ -417,6 +417,64 @@ function prepareNewReportForSave() {
     row.yQty = row.prevYQty + Number(row.tQty || 0);
   });
   data.reportDate = currentReportDate;
+}
+
+function buildReportHistorySummary(state) {
+  const plant1 = state.plant1 || [];
+  const plant2 = state.plant2 || [];
+  const allRows = [...plant1, ...plant2];
+  const sum = (rows, key) => rows.reduce((total, row) => total + Number(row[key] || 0), 0);
+  return {
+    reportDate: state.reportDate || '',
+    plant1: {tItem:sum(plant1,'tItem'), tQty:sum(plant1,'tQty')},
+    plant2: {tItem:sum(plant2,'tItem'), tQty:sum(plant2,'tQty')},
+    total: {
+      tItem:sum(allRows,'tItem'), tQty:sum(allRows,'tQty'),
+      mItem:sum(allRows,'mItem'), mQty:sum(allRows,'mQty'),
+      yItem:sum(allRows,'yItem'), yQty:sum(allRows,'yQty')
+    }
+  };
+}
+
+function compactReportHistory() {
+  const compact = {};
+  Object.entries(data.history || {}).forEach(([date, state]) => {
+    compact[date] = state && state.total ? state : buildReportHistorySummary(state || {});
+  });
+  data.history = compact;
+}
+
+function sharedStateSignature(state) {
+  const rows = [...(state.plant1 || []), ...(state.plant2 || [])];
+  return JSON.stringify({
+    reportDate: state.reportDate || '',
+    rows: rows.map(row => [
+      row.line, Number(row.tItem || 0), Number(row.tQty || 0),
+      Number(row.mItem || 0), Number(row.mQty || 0),
+      Number(row.yItem || 0), Number(row.yQty || 0), row.note || ''
+    ])
+  });
+}
+
+function verifySharedSave(expectedState) {
+  return new Promise(resolve => {
+    const callbackName = `verifySharedSave_${Date.now()}`;
+    const script = document.createElement('script');
+    const timer = setTimeout(() => finish(false), 8000);
+    const finish = result => {
+      clearTimeout(timer);
+      delete window[callbackName];
+      script.remove();
+      resolve(result);
+    };
+    window[callbackName] = payload => {
+      finish(Boolean(payload?.ok && payload.state &&
+        sharedStateSignature(payload.state) === sharedStateSignature(expectedState)));
+    };
+    script.onerror = () => finish(false);
+    script.src = `${GOOGLE_SHEETS_WEB_APP_URL}?callback=${callbackName}&t=${Date.now()}`;
+    document.body.appendChild(script);
+  });
 }
 
 function prepareNewReportDraft() {
@@ -811,12 +869,17 @@ async function saveSharedData() {
   }
   setSyncStatus('Google Sheets에 저장 중');
   try {
+    compactReportHistory();
+    const requestPayload = JSON.stringify({state:data,updatedBy:navigator.userAgent});
+    if(requestPayload.length > 45000) throw new Error('공유 데이터 용량이 너무 큽니다');
     await fetch(GOOGLE_SHEETS_WEB_APP_URL, {
       method:'POST',
       mode:'no-cors',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({payload:JSON.stringify({state:data,updatedBy:navigator.userAgent})})
+      body:new URLSearchParams({payload:requestPayload})
     });
+    await new Promise(resolve => setTimeout(resolve, 700));
+    if(!await verifySharedSave(data)) throw new Error('Google Sheets 저장 확인 실패');
     loadedReportState = JSON.parse(JSON.stringify(data));
     newReportDraftPrepared = false;
     hasUnsavedChanges = false;
