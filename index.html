@@ -247,8 +247,8 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
           <th style="width:70px">검사자</th>
           <th>금일 품목</th>
           <th>금일 수량</th>
-          <th>6월누적 품목</th>
-          <th>6월누적 수량</th>
+          <th class="input-month-item">월누적 품목</th>
+          <th class="input-month-qty">월누적 수량</th>
           <th>26년누적 품목</th>
           <th>26년누적 수량</th>
           <th style="width:150px">비고</th>
@@ -269,8 +269,8 @@ tbody td{padding:10px 10px;text-align:center;border:1px solid #d0d8e8;vertical-a
           <th style="width:70px">검사자</th>
           <th>금일 품목</th>
           <th>금일 수량</th>
-          <th>6월누적 품목</th>
-          <th>6월누적 수량</th>
+          <th class="input-month-item">월누적 품목</th>
+          <th class="input-month-qty">월누적 수량</th>
           <th>26년누적 품목</th>
           <th>26년누적 수량</th>
           <th style="width:150px">비고</th>
@@ -368,6 +368,23 @@ function updateReportDateLabels() {
   document.getElementById('th-month').textContent = `${reportMonth}월 누적`;
 }
 
+function updateInputDateLabels() {
+  const parts = String(data.reportDate || currentReportDate).split('-').map(Number);
+  const reportMonth = parts[1] || mm;
+  document.querySelectorAll('.input-month-item').forEach(el => {
+    el.textContent = `${reportMonth}월누적 품목`;
+  });
+  document.querySelectorAll('.input-month-qty').forEach(el => {
+    el.textContent = `${reportMonth}월누적 수량`;
+  });
+}
+
+function isSameReportMonth(a, b) {
+  const left = String(a || '').slice(0, 7);
+  const right = String(b || '').slice(0, 7);
+  return Boolean(left && right && left === right);
+}
+
 function advancePreviousDayIfNeeded(state) {
   if(!state.reportDate) {
     state.reportDate = currentReportDate;
@@ -378,9 +395,10 @@ function advancePreviousDayIfNeeded(state) {
   state.kpi = state.kpi || {};
   state.kpi.prevItem = rows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
   state.kpi.prevQty = rows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  const sameMonth = isSameReportMonth(state.reportDate, currentReportDate);
   rows.forEach(row => {
-    row.prevMItem = Number(row.mItem || 0);
-    row.prevMQty = Number(row.mQty || 0);
+    row.prevMItem = sameMonth ? Number(row.mItem || 0) : 0;
+    row.prevMQty = sameMonth ? Number(row.mQty || 0) : 0;
     row.prevYItem = Number(row.yItem || 0);
     row.prevYQty = Number(row.yQty || 0);
     row.tItem = 0;
@@ -405,10 +423,11 @@ function prepareNewReportForSave() {
   data.kpi = data.kpi || {};
   data.kpi.prevItem = previousRows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
   data.kpi.prevQty = previousRows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  const sameMonth = isSameReportMonth(loadedReportState.reportDate, currentReportDate);
   currentRows.forEach(row => {
     const previous = previousRows.find(item => item.line === row.line) || {};
-    row.prevMItem = Number(previous.mItem || 0);
-    row.prevMQty = Number(previous.mQty || 0);
+    row.prevMItem = sameMonth ? Number(previous.mItem || 0) : 0;
+    row.prevMQty = sameMonth ? Number(previous.mQty || 0) : 0;
     row.prevYItem = Number(previous.yItem || 0);
     row.prevYQty = Number(previous.yQty || 0);
     row.mItem = row.prevMItem + Number(row.tItem || 0);
@@ -484,10 +503,11 @@ function prepareNewReportDraft() {
   data.kpi = data.kpi || {};
   data.kpi.prevItem = previousRows.reduce((sum, row) => sum + Number(row.tItem || 0), 0);
   data.kpi.prevQty = previousRows.reduce((sum, row) => sum + Number(row.tQty || 0), 0);
+  const sameMonth = isSameReportMonth(loadedReportState.reportDate, currentReportDate);
   currentRows.forEach(row => {
     const previous = previousRows.find(item => item.line === row.line) || {};
-    row.prevMItem = Number(previous.mItem || 0);
-    row.prevMQty = Number(previous.mQty || 0);
+    row.prevMItem = sameMonth ? Number(previous.mItem || 0) : 0;
+    row.prevMQty = sameMonth ? Number(previous.mQty || 0) : 0;
     row.prevYItem = Number(previous.yItem || 0);
     row.prevYQty = Number(previous.yQty || 0);
     row.tItem = 0;
@@ -516,7 +536,7 @@ function switchTab(t) {
 }
 
 // ── 누적 자동 계산 ──
-// 각 라인: mItem = 전일6월누적 + 금일, yItem = 전일26년누적 + 금일 (같은 구조)
+// 각 라인: mItem = 전일 월누적 + 금일, yItem = 전일 연누적 + 금일 (같은 구조)
 // 입력 필드는 "전일 누적"을 직접 입력하고 표시는 "금일 후 누적"으로 보여줌
 // 여기서는 data.mItem/yItem 이 이미 "금일 포함 누적"으로 저장됨
 // 입력 시: 전일누적 입력 → 금일 더해서 자동 계산 후 data에 반영
@@ -686,6 +706,7 @@ function renderReport() {
 
 // ── 입력 탭 렌더 ──
 function renderInputs() {
+  updateInputDateLabels();
   [1,2].forEach(p => {
     const tbody = document.getElementById(`plant${p}-tbody`);
     tbody.innerHTML = '';
@@ -908,6 +929,9 @@ function loadSharedData(showMessage = false) {
         data = payload.state;
         loadedReportState = JSON.parse(JSON.stringify(data));
         newReportDraftPrepared = false;
+        if(document.getElementById('tab-input').classList.contains('active')) {
+          prepareNewReportDraft();
+        }
         document.getElementById('tot-row')?.remove();
         renderReport();
         renderInputs();
